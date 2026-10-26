@@ -1,0 +1,6 @@
+django
+requests
+daphne
+channels
+
+
