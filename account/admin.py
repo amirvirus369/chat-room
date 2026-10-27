@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ValidationError
 from .models import CustomUser
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, AdminPasswordChangeForm
 import re
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -50,9 +51,21 @@ class CustomUserCreationForm(forms.ModelForm):
         return user
 
 class CustomUserChangeForm(forms.ModelForm):
+    password = ReadOnlyPasswordHashField(
+        label="رمز عبور",
+        help_text=(
+            "رمزهای عبور به صورت خام ذخیره نمی‌شوند، بنابراین راهی برای دیدن رمز عبور این کاربر وجود ندارد، "
+            "اما می‌توانید رمز عبور را با استفاده از <a href=\"../password/\">این فرم</a> تغییر دهید."
+        ),
+    )
+
     class Meta:
         model = CustomUser
-        fields = ('phone_number', 'full_name', 'avatar', 'is_premium', 'is_active', 'is_staff', 'is_superuser')
+        fields = (
+            'phone_number', 'password', 'full_name', 'avatar',
+            'is_premium', 'is_active', 'is_staff', 'is_superuser',
+            'groups', 'user_permissions'
+        )
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
@@ -67,6 +80,7 @@ class CustomUserChangeForm(forms.ModelForm):
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
+    change_password_form = AdminPasswordChangeForm
     
     list_display = ['phone_number', 'full_name', 'is_premium', 'is_staff', 'is_active']
     list_filter = ['is_premium', 'is_staff', 'is_active', 'groups']
