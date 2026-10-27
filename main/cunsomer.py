@@ -4,7 +4,6 @@ import json
 from . import models
 from account.models import CustomUser
 from django.utils import timezone
-from django.http import HttpResponse
 from django.core.cache import cache
 
 
@@ -15,7 +14,7 @@ class RealTime(WebsocketConsumer):
 
         if not self.user or not self.user.is_authenticated:
             self.close()
-            return HttpResponse('دسترسی به این صفحه ندارید لطفا اول ثبت نام کنید ')
+            return 
 
         name = self.scope['url_route']['kwargs'].get('full_name')
 
@@ -104,7 +103,7 @@ class RealTime(WebsocketConsumer):
         try:
             data = json.loads(text_data)
         except:
-            return HttpResponse('جیسون لود نشده ')
+            return 
         message_type = data.get('type')
 
         if message_type == 'new':

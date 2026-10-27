@@ -45,6 +45,12 @@ python manage.py makemigrations
 python manage.py createsuperuser
 
 ```
+  برای ران کردن پروژه با پورت دلخواه خودتون به جای 8080 هر پورتی دوست دارید بزنید
+
+```bash
+python manage.py runserver 8080
+
+```
 
 برای ران کردن پروژه 
 
