@@ -41,8 +41,8 @@
                 </div>
                 <!-- منوی کشویی همبرگری (ساخت گروه و کانال) -->
                 <div class="dropdown-menu-custom" id="hamburgerMenu" style="margin-top: 30px;">
-                    <div class="dropdown-item-custom"><i class="fa-solid fa-users"></i> ساختن گروه</div>
-                    <div class="dropdown-item-custom"><i class="fa-solid fa-bullhorn"></i> ساختن کانال</div>
+                    <div class="dropdown-item-custom new-version"><i class="fa-solid fa-users" ></i> ساختن گروه</div>
+                    <div class="dropdown-item-custom new-version"><i class="fa-solid fa-bullhorn"></i> ساختن کانال</div>
                      <a href="{% url 'chat:logout' %}" class="dropdown-item-custom"><i class="fa-solid fa-right-from-bracket"></i>خارج شدن </a>
                 </div>
             </div>
@@ -756,11 +756,13 @@ window.addEventListener("resize", function () {
 
 scrollToBottom();
 
-const items = document.getElementsByClassName('dropdown-item-custom');
+document.addEventListener('DOMContentLoaded', function() {
+    const items = document.querySelectorAll('.new-version');
 
-Array.from(items).forEach(function(item) {
-    item.addEventListener('click', function() {
-        alert('در این ورژن این گزینه‌ها پیاده‌سازی نشدن');
+    items.forEach(function(item) {
+        item.addEventListener('click', function() {
+            alert('در این ورژن این گزینه‌ها پیاده‌سازی نشدن');
+        });
     });
 });
 

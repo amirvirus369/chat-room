@@ -13,6 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 def PageCHat(request,full_name):
+    if not request.user.is_authenticated:
+        return redirect('chat:authen')
     username = get_object_or_404(CustomUser,full_name=full_name)
     is_block = models.Block.objects.filter(blocker = request.user,blocked =username).exists() or models.Block.objects.filter(blocker = username,blocked = request.user).exists()
     block = False
