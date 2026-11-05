@@ -9,5 +9,8 @@ urlpatterns = [
     path('very',views.verify,name='very'),
     path('login',views.Login_user,name='login'),
     path('logout',views.logout_user,name='logout'),
-    path('upload/<str:user>/',views.upload,name='upload')
+    path('upload/<str:user>/',views.upload,name='upload'),
+
+    path('group/<int:group_id>/', views.group_chat, name='group_chat'),
+    path('upload-group/<int:group_id>/', views.upload_group, name='upload_group'),
 ]

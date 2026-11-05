@@ -5,273 +5,900 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>صفحه {{username.full_name}}</title>
-    <!-- فونت وزیرمتن -->
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet"
-        type="text/css" />
-    <!-- آیکون‌های FontAwesome -->
+    <title>صفحه {{ username.full_name }}</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'style.css' %}">
-  
+    <style>
+        a { text-decoration: none !important; }
+
+    </style>
 </head>
 
 <body>
 
-    <div class="app-container">
-        <!-- سایدبار گفتگوها -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="user-profile">
-                    <div class="avatar">
-                        <div class="status-dot"></div>
-                    </div>
-                    <div>
-                        
-                        <h4 style="font-size: 0.95rem;">{{request.user.full_name}}</h4>
-                        <span style="font-size: 1 px; color: #888; font-weight: normal; margin-right: 6px;">
-                V:1.0
-            </span>
-                        <span style="font-size: 0.75rem; color: red" id="statusme">آنلاین</span>
-                        
-                    </div>
+<div class="app-container">
+
+    <!-- ==================== سایدبار ==================== -->
+    <div class="sidebar" id="sidebar">
+
+        <!-- هدر سایدبار -->
+        <div class="sidebar-header">
+            <div class="user-profile">
+                <div class="avatar">
+                    📱
+                    <div class="status-dot"></div>
                 </div>
-                <!-- منوی همبرگری -->
-                <div style="color: var(--text-secondary); cursor: pointer;" id="hamburgerBtn">
-                    <i class="fa-solid fa-bars"></i>
-                </div>
-                <!-- منوی کشویی همبرگری (ساخت گروه و کانال) -->
-                <div class="dropdown-menu-custom" id="hamburgerMenu" style="margin-top: 30px;">
-                    <div class="dropdown-item-custom new-version"><i class="fa-solid fa-users" ></i> ساختن گروه</div>
-                    <div class="dropdown-item-custom new-version"><i class="fa-solid fa-bullhorn"></i> ساختن کانال</div>
-                     <a href="{% url 'chat:logout' %}" class="dropdown-item-custom"><i class="fa-solid fa-right-from-bracket"></i>خارج شدن </a>
+                <div>
+                    <h4 style="font-size: 0.95rem;">{{ request.user.full_name }}</h4>
+                    <span style="font-size: 0.75rem; color: #888; margin-right: 6px;">V:1.1</span>
+                    <span style="font-size: 0.75rem; color: green;" id="statusme">آنلاین</span>
                 </div>
             </div>
-            <div style="text-align: center;">افراد</div>
 
-           
-            <div class="chat-list">
-                <!-- نمونه آیتم گفتگو -->
-                 {% for i in contact %}
-                <a href="{% url 'chat:chat' i.user.full_name%}" class="chat-item active" data-name="{{i.user.full_name}}" data-user-id="1">
-                    <div class="avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></div>
-                    <div class="chat-info">
-                        <div class="chat-name-time">
-                            <span class="chat-name">{{i.user.full_name }}</span>
-                            <span class="chat-time">{{i.chat.date|date:"H:i"}}</span>
-                        </div>
-                        <div class="chat-last-msg" id="last-message-{{i.user.full_name}}">
-                            {% if i.chat.message %}
-                           {{i.chat.message}}
-                           {% endif %}
-                           {% if i.chat.file %}
-                           {{i.chat.file}}
-                           {% endif %}
-                        </div>
-                    </div>
-                    <span class="unread-badge" id="unread-{{i.user.full_name}}" style="display:{% if i.seen == None %}none{% endif %};">{{i.seen}}</span>
-                    <span class="unread-badge" id="un-{{i.user.full_name}}" style="display:flex;">افلاین</span>
+            <div style="color: var(--text-secondary); cursor: pointer;" id="hamburgerBtn">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+
+            <div class="dropdown-menu-custom" id="hamburgerMenu" style="margin-top: 30px;">
+                <div class="dropdown-item-custom" id="createGroupBtn">
+                    <i class="fa-solid fa-users"></i> ساختن گروه
+                </div>
+                <div class="dropdown-item-custom new-version">
+                    <i class="fa-solid fa-bullhorn"></i> ساختن کانال
+                </div>
+                <a href="{% url 'chat:logout' %}" class="dropdown-item-custom">
+                    <i class="fa-solid fa-right-from-bracket"></i> خارج شدن
                 </a>
-                {% endfor %}
             </div>
         </div>
 
-        <!-- صفحه چت اصلی -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button class="back-btn"><i class="fa-solid fa-arrow-right"></i></button>
-                    <div class="avatar" style="width: 38px; height: 38px; font-size: 0.9rem;" id="currentChatAvatar"></div>
-                    <div class="chat-header-info">
-                        <h3 id="currentChatName"> {% if request.user.full_name == username.full_name %}خودم{% else %}{{username.full_name}}{% endif %}</h3>
-                        <span id="userStatus" class="online" style="color: red;">افلاین</span>
+        <!-- بخش گروه‌ها -->
+        <div style="text-align: center; margin: 12px 0 6px; font-size: 0.85rem; color: #666; font-weight: 500;">
+            گروه‌ها
+        </div>
+
+        <div class="chat-list" id="groupList">
+            {% for g in user_groups %}
+            <a href="{% url 'chat:group_chat' g.id %}"
+               class="chat-item group-item {% if is_group and group.id == g.id %}is-current{% endif %}"
+               data-group-id="{{ g.id }}">
+                <div class="avatar group-avatar">
+                    👨‍👩‍👧‍👦
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name-time">
+                        <span class="chat-name">{{ g.name }}</span>
+                    </div>
+                    <div class="chat-last-msg" id="last-message-group-{{ g.id }}">
+                        {% if g.last_msg %}
+                            {% if g.last_msg.message %}
+                                {{ g.last_msg.sender.full_name }}: {{ g.last_msg.message }}
+                            {% else %}
+                                {{ g.last_msg.sender.full_name }}: فایل
+                            {% endif %}
+                        {% else %}
+                            گروه
+                        {% endif %}
                     </div>
                 </div>
-                <div class="chat-header-actions" style="display: flex; gap: 15px; align-items: center;">
-                    <i class="fa-solid fa-magnifying-glass" style="cursor: pointer;" id="search"></i>
-                    <!-- سه نقطه هدر چت -->
-                    <i class="fa-solid fa-ellipsis-vertical" id="threeDotsBtn" style="cursor: pointer;"></i>
-                    <!-- منوی کشویی سه نقطه (مسدود کردن) -->
-                     {% if not block %}
-                    <div class="dropdown-menu-custom" id="threeDotsMenu" style="left: 0; right: auto;">
-                        <div class="dropdown-item-custom" style="color: #ef4444;" id="blocker"><i class="fa-solid fa-ban" ></i> مسدود کردن </div>
+                <span class="unread-badge group-unread-badge" id="unread-group-{{ g.id }}"
+                      style="display:{% if g.unread_count %}flex{% else %}none{% endif %};">
+                    {{ g.unread_count|default:0 }}
+                </span>
+            </a>
+            {% empty %}
+            <div style="text-align:center; color:#999; font-size:0.8rem; padding:10px;">
+                هنوز گروهی ندارید
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- بخش افراد -->
+        <div style="text-align: center; margin: 14px 0 6px; font-size: 0.85rem; color: #666; font-weight: 500;">
+            افراد
+        </div>
+
+        <div class="chat-list" id="privateChatList">
+            {% for i in contact %}
+            <a href="{% url 'chat:chat' i.user.full_name %}"
+               class="chat-item"
+               data-name="{{ i.user.full_name }}">
+                <div class="avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                    🧒
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name-time">
+                        <span class="chat-name">{{ i.user.full_name }}</span>
+                        <span class="chat-time">{{ i.chat.date|date:"H:i" }}</span>
                     </div>
+                    <div class="chat-last-msg" id="last-message-{{ i.user.full_name }}">
+                        {% if i.chat.message %}{{ i.chat.message }}{% endif %}
+                        {% if i.chat.file %}{{ i.chat.file }}{% endif %}
+                    </div>
+                </div>
+                <span class="unread-badge" id="unread-{{ i.user.full_name }}"
+                      style="display:{% if i.seen == None %}none{% else %}flex{% endif %};">
+                    {{ i.seen }}
+                </span>
+                <span class="unread-badge status-badge" id="un-{{ i.user.full_name }}" style="display:flex; color: red;">آفلاین</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ==================== ناحیه چت اصلی ==================== -->
+    <div class="chat-area">
+
+        <!-- هدر چت -->
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="back-btn"><i class="fa-solid fa-arrow-right"></i></button>
+                <div class="avatar" style="width: 38px; height: 38px; font-size: 0.9rem;" id="currentChatAvatar"></div>
+                <div class="chat-header-info">
+                    {% if is_group %}
+                        <h3 id="currentChatName">{{ group.name }}</h3>
+                        <span id="userStatus" style="color:#666;">
+                            گروه · <span id="groupMemberCount">{{ group.members.count }}</span> عضو
+                        </span>
+                    {% else %}
+                        <h3 id="currentChatName">
+                            {% if request.user.full_name == username.full_name %}خودم{% else %}{{ username.full_name }}{% endif %}
+                        </h3>
+                        <span id="userStatus" class="offline" style="color: red;">آفلاین</span>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="messages-container" id="messagesContainer">
-                {% for i in chat_all %}
+            <div class="chat-header-actions" style="display: flex; gap: 15px; align-items: center;">
+                <i class="fa-solid fa-magnifying-glass" style="cursor: pointer;" id="search"></i>
+                <i class="fa-solid fa-ellipsis-vertical" id="threeDotsBtn" style="cursor: pointer;"></i>
+
+                <div class="dropdown-menu-custom" id="threeDotsMenu" style="left: 0; right: auto;">
+                    {% if is_group and is_creator %}
+                        <div class="dropdown-item-custom" id="addMemberBtn">
+                            <i class="fa-solid fa-user-plus"></i> افزودن عضو
+                        </div>
+                        <div class="dropdown-item-custom" id="manageMembersBtn">
+                            <i class="fa-solid fa-users-gear"></i> مدیریت اعضا
+                        </div>
+                    {% endif %}
+
+                    {% if not is_group and not block %}
+                        <div class="dropdown-item-custom" style="color: #ef4444;" id="blocker">
+                            <i class="fa-solid fa-ban"></i> مسدود کردن
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- لیست پیام‌ها -->
+        <div class="messages-container" id="messagesContainer">
+            {% for i in chat_all %}
                 {% if i.sender.id == request.user.id %}
-                  <div class="message outgoing">
-                    {% if i.message %}
-                   {{i.message}}
-                   {% endif %}
+                <div class="message outgoing">
+                    {% if i.message %}{{ i.message }}{% endif %}
                     {% if i.file %}
-                   <a href="{{i.file.url}}" download="{{ i.filename }}">{{i.file}}</a>
-                   {% endif %}
+                        <a href="{{ i.file.url }}" download="{{ i.filename }}">{{ i.file }}</a>
+                    {% endif %}
                     <div class="message-footer">
-                        <span class="time">{{i.date|date:"H:i"}}</span>
+                        <span class="time">{{ i.date|date:"H:i" }}</span>
+                        {% if not is_group %}
                         <span class="message-status {% if i.seen %}read{% else %}sent{% endif %} tik-status">
                             <i class="fa-solid fa-check"></i>
                             <i class="fa-solid fa-check"></i>
                         </span>
+                        {% endif %}
                     </div>
                 </div>
                 {% else %}
                 <div class="message incoming">
-                   {% if i.message %}
-                   {{i.message}}
-                   {% endif %}
+                    {% if is_group %}
+                        <div style="font-size:0.75rem; color:#666; margin-bottom:2px;">{{ i.sender.full_name }}</div>
+                    {% endif %}
+                    {% if i.message %}{{ i.message }}{% endif %}
                     {% if i.file %}
-                   <a href="{{i.file.url}}" download="{{ i.filename }}">{{i.file}}</a>
-                   {% endif %}
+                        <a href="{{ i.file.url }}" download="{{ i.filename }}">{{ i.file }}</a>
+                    {% endif %}
                     <div class="message-footer">
-                        <span class="time">{{i.date|date:"H:i"}}</span>
+                        <span class="time">{{ i.date|date:"H:i" }}</span>
                     </div>
                 </div>
                 {% endif %}
-                {% endfor %}
-            </div>
-<div id="uploadProgressContainer" style="display: none; padding: 5px 10px; background: #f0f0f0;">
-    <span id="progressText" style="font-size: 0.8rem;">0%</span>
-    <div style="background: #ddd; border-radius: 4px; height: 6px; width: 100%; margin-top: 4px;">
-        <div id="uploadProgressBar" style="background: #3b82f6; width: 0%; height: 100%; border-radius: 4px;"></div>
-    </div>
-</div>
-            <!-- نوار پایین برای نوشتن پیام -->
-            <div class="chat-input-area">
-                <div class="input-actions">
-                    {% if is_block %}
-                    {% else %}
-                    <i class="fa-solid fa-paperclip" title="ارسال فایل"></i>
-                    {% endif %}
-                    
-                    <!-- نوار پیشرفت آپلود (اضافه شود) -->
+            {% endfor %}
+        </div>
 
-                </div>
-                {% if is_block %}
-                {% if block %}
-                <p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>
-                {% elif blocker %}
-                <p>کاربر شمارا مسدود کرده است</p>
-                {% endif %}
-
-                
-                
-                {% else %}
-                <input type="text" id="messageInput" placeholder="پیام خود را بنویسید...">
-                <button class="send-btn" id="btn"><i class="fa-solid fa-paper-plane"></i></button>
-                {% endif %}
+        <!-- نوار پیشرفت آپلود -->
+        <div id="uploadProgressContainer" style="display: none; padding: 5px 10px; background: #f0f0f0;">
+            <span id="progressText" style="font-size: 0.8rem;">0%</span>
+            <div style="background: #ddd; border-radius: 4px; height: 6px; width: 100%; margin-top: 4px;">
+                <div id="uploadProgressBar" style="background: #3b82f6; width: 0%; height: 100%; border-radius: 4px;"></div>
             </div>
         </div>
+
+        <!-- نوار نوشتن پیام -->
+        <div class="chat-input-area">
+            <div class="input-actions">
+                {% if not is_block %}
+                    <i class="fa-solid fa-paperclip" title="ارسال فایل"></i>
+                {% endif %}
+            </div>
+
+            {% if is_block %}
+                {% if block %}
+                    <p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>
+                {% elif blocker %}
+                    <p>کاربر شما را مسدود کرده است</p>
+                {% endif %}
+            {% else %}
+                <input type="text" id="messageInput" placeholder="پیام خود را بنویسید...">
+                <button class="send-btn" id="btn"><i class="fa-solid fa-paper-plane"></i></button>
+            {% endif %}
+        </div>
     </div>
-    </div> <!-- پایان app-container -->
+</div>
 
 
-    
-<!-- ساختار HTML مودال جستجو -->
-<div id="searchModal" class="modal-custom" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+<!-- ==================== مودال جستجو ==================== -->
+<div id="searchModal" class="modal-custom"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
     <div style="background: white; width: 400px; max-width: 90%; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h4 style="margin: 0; font-size: 1rem; color: #333;">جستجوی کاربر</h4>
             <button id="closeSearchModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
         </div>
-        <input type="text" id="liveSearchInput" placeholder="نام کاربر را وارد کنید..." style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit;">
-        <div id="searchResults" style="margin-top: 15px; max-height: 220px; overflow-y: auto;">
-            <!-- نتایج جستجوی وب‌سوکت اینجا نمایش داده می‌شود -->
-        </div>
+        <input type="text" id="liveSearchInput" placeholder="نام کاربر را وارد کنید..."
+               style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit;">
+        <div id="searchResults" style="margin-top: 15px; max-height: 220px; overflow-y: auto;"></div>
     </div>
 </div>
 
 
+<!-- ==================== مودال ساخت گروه ==================== -->
+<div id="createGroupModal" class="modal-custom"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; width: 420px; max-width: 95%; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <h4 style="margin-top: 0;">ساخت گروه جدید</h4>
+        <input type="text" id="groupNameInput" placeholder="نام گروه..."
+               style="width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="max-height: 200px; overflow-y: auto; margin: 10px 0;" id="memberList"></div>
+        <button id="submitCreateGroup"
+                style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            ساخت گروه
+        </button>
+        <button id="closeCreateGroup"
+                style="margin-top: 8px; width: 100%; padding: 8px; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer;">
+            انصراف
+        </button>
+    </div>
+</div>
+
+
+<!-- ==================== مودال افزودن عضو ==================== -->
+<div id="addMemberModal" class="modal-custom"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; width: 420px; max-width: 95%; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <h4 style="margin-top: 0;">افزودن عضو به گروه</h4>
+        <div style="max-height: 250px; overflow-y: auto; margin: 10px 0;" id="addMemberList"></div>
+        <button id="submitAddMembers"
+                style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            افزودن
+        </button>
+        <button id="closeAddMember"
+                style="margin-top: 8px; width: 100%; padding: 8px; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer;">
+            انصراف
+        </button>
+    </div>
+</div>
+
+
+<!-- ==================== مودال مدیریت اعضا ==================== -->
+<div id="manageMembersModal" class="modal-custom"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; width: 420px; max-width: 95%; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <h4 style="margin-top: 0;">مدیریت اعضای گروه</h4>
+        <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;" id="manageMembersList"></div>
+        <button id="closeManageMembers"
+                style="margin-top: 8px; width: 100%; padding: 8px; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer;">
+            بستن
+        </button>
+    </div>
+</div>
+
+
+{{ group_members|json_script:"group-members-data" }}
 
 <script>
-(function () {
-    var ONLINE = /(^|\s)(آ|ا)نلا|online/i;
-    var app = document.querySelector('.app-container');
-    var isMobile = function () { return window.matchMedia('(max-width: 768px)').matches; };
+/* =========================================================
+   ۱. متغیرهای اصلی
+========================================================= */
+const isCreator = {{ is_creator|yesno:"true,false"|default:"false" }};
+let currentMembers = [];
+try {
+    const el = document.getElementById('group-members-data');
+    if (el) currentMembers = JSON.parse(el.textContent);
+} catch (e) {}
 
-    function hue(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % 360; } return h; }
+const me = '{{ request.user.full_name }}';
+const User = '{{ username.full_name }}';
+const isGroupPage = {{ is_group|yesno:"true,false" }};
+const currentGroupId = {{ group.id|default:"null" }};
+const address = window.location.protocol === 'https:' ? 'wss' : 'ws';
 
-    function paint(av, name) {
-        name = (name || '').trim();
-        if (!av || !name) return;
-        var ch = Array.from(name)[0];
-        if (av.getAttribute('data-initial') !== ch) av.setAttribute('data-initial', ch);
-        var h = hue(name);
-        var bg = 'linear-gradient(135deg,hsl(' + h + ',78%,62%),hsl(' + ((h + 40) % 360) + ',72%,48%))';
-        if (av.style.getPropertyValue('--av') !== bg) av.style.setProperty('--av', bg);
+let web;
+let msgInput = document.getElementById('messageInput');
+let sendBtn = document.getElementById('btn');
+const msgArea = document.getElementById('messagesContainer');
+const StatusUser = document.getElementById('userStatus');
+
+
+/* =========================================================
+   ۲. توابع کمکی
+========================================================= */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function scrollToBottom() {
+    if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
+}
+
+function norm(s) {
+    return (s || '').trim().replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+}
+
+
+/* =========================================================
+   ۳. مدیریت وضعیت آنلاین / آفلاین
+========================================================= */
+function CheckUser(status) {
+    if (!StatusUser || isGroupPage) return;
+    const on = status === 'online';
+    StatusUser.textContent = on ? 'آنلاین' : 'آفلاین';
+    StatusUser.classList.toggle('is-online', on);
+    StatusUser.classList.toggle('offline', !on);
+}
+
+
+/* =========================================================
+   ۴. اتصال وب‌سوکت
+========================================================= */
+if (isGroupPage) {
+    web = new WebSocket(`${address}://${window.location.host}/websocket/group/${currentGroupId}`);
+} else {
+    web = new WebSocket(`${address}://${window.location.host}/websocket/${encodeURIComponent(User)}`);
+}
+
+
+/* =========================================================
+   ۵. ارسال پیام
+========================================================= */
+function SendMessage() {
+    const Message = msgInput.value.trim();
+    if (!Message || web.readyState !== WebSocket.OPEN) return;
+
+    web.send(JSON.stringify({ msg: Message, type: 'new' }));
+
+    const time = getCurrentTime();
+    msgArea.insertAdjacentHTML('beforeend', `
+        <div class="message outgoing">
+            ${escapeHtml(Message)}
+            <div class="message-footer">
+                <span class="time">${time}</span>
+                ${!isGroupPage ? `
+                <span class="message-status sent tik-status">
+                    <i class="fa-solid fa-check"></i>
+                    <i class="fa-solid fa-check"></i>
+                </span>` : ''}
+            </div>
+        </div>
+    `);
+
+    msgInput.value = '';
+    scrollToBottom();
+
+    if (!isGroupPage) {
+        updateSidebar(User, Message, new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), false);
     }
+}
 
-    function syncStatus() {
-        document.querySelectorAll('[id^="un-"],#statusme,#userStatus').forEach(function (el) {
-            var t = (el.textContent || '').trim();
-            var on = ONLINE.test(t);
-            el.classList.toggle('is-online', on);
-            el.classList.toggle('is-offline', !on);
-            if (el.id.indexOf('un-') === 0 && t && el.title !== t) el.title = t;
-        });
-    }
-
-    function syncAvatars() {
-        var me = document.querySelector('.user-profile h4');
-        paint(document.querySelector('.user-profile .avatar'), me && me.textContent);
-        var cn = document.getElementById('currentChatName');
-        paint(document.getElementById('currentChatAvatar'), cn && cn.textContent);
-        document.querySelectorAll('.chat-item').forEach(function (it) {
-            paint(it.querySelector('.avatar'), it.getAttribute('data-name'));
-        });
-    }
-
-    function markCurrent() {
-        var cn = document.getElementById('currentChatName');
-        var cur = ((cn && cn.textContent) || '').trim();
-        var me = document.querySelector('.user-profile h4');
-        if (cur === 'خودم' && me) cur = me.textContent.trim();
-        document.querySelectorAll('.chat-item').forEach(function (it) {
-            it.classList.toggle('is-current', !!cur && (it.getAttribute('data-name') || '').trim() === cur);
-        });
-    }
-
-    function run() { syncStatus(); syncAvatars(); markCurrent(); }
-
-    var cfg = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class'] };
-    var pending = false;
-    var obs = new MutationObserver(function () {
-        if (pending) return;
-        pending = true;
-        requestAnimationFrame(function () {
-            pending = false;
-            obs.disconnect();
-            try { run(); } finally { obs.observe(document.body, cfg); }
-        });
+if (sendBtn) sendBtn.addEventListener('click', SendMessage);
+if (msgInput) {
+    msgInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            SendMessage();
+        }
     });
+}
 
-    run();
-    obs.observe(document.body, cfg);
 
-    var cn0 = document.getElementById('currentChatName');
-    if (app && cn0 && !cn0.textContent.trim()) app.classList.add('m-show-list');
+/* =========================================================
+   ۶. مدیریت سایدبار چت شخصی
+========================================================= */
+const privateChatList = document.getElementById('privateChatList');
 
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest) return;
-        if (e.target.closest('.back-btn') && app) { app.classList.add('m-show-list'); return; }
-        var it = e.target.closest('.chat-item');
-        if (it) {
-            document.querySelectorAll('.chat-item.is-current').forEach(function (x) { x.classList.remove('is-current'); });
-            it.classList.add('is-current');
-            if (isMobile() && app) setTimeout(function () { app.classList.remove('m-show-list'); }, 0);
+function findChatItem(name) {
+    return Array.from(privateChatList.querySelectorAll('.chat-item'))
+        .find(el => norm(el.dataset.name) === norm(name));
+}
+
+const onlineSet = new Set();   // نام‌های نرمال‌شده‌ی آنلاین‌ها
+
+function paintStatus(item) {
+    const badge = item.querySelector('.status-badge');
+    if (!badge) return;
+    const on = onlineSet.has(norm(item.dataset.name));
+    badge.textContent = on ? 'آنلاین' : 'آفلاین';
+    badge.classList.toggle('is-online', on);
+}
+
+function paintAllStatuses() {
+    privateChatList.querySelectorAll('.chat-item').forEach(paintStatus);
+}
+
+function createChatItem(name) {
+    const item = document.createElement('a');
+    item.href = `/chat/${encodeURIComponent(name)}/`;
+    item.className = 'chat-item';
+    item.dataset.name = name;
+    item.innerHTML = `
+        <div class="avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></div>
+        <div class="chat-info">
+            <div class="chat-name-time">
+                <span class="chat-name"></span>
+                <span class="chat-time"></span>
+            </div>
+            <div class="chat-last-msg"></div>
+        </div>
+        <span class="unread-badge" id="unread-${name}" style="display:none;">0</span>
+        <span class="unread-badge status-badge " id="un-${name}" style="display:flex; color: red;">آفلاین</span>
+    `;
+    item.querySelector('.chat-name').textContent = name;
+    item.querySelector('.chat-last-msg').id = `last-message-${name}`;
+    paintStatus(item);
+    return item;
+}
+
+function updateSidebar(name, message, time, isIncoming) {
+    let item = findChatItem(name);
+    if (!item) {
+        item = createChatItem(name);
+        privateChatList.prepend(item);
+    }
+
+    item.querySelector('.chat-last-msg').textContent = message;
+    item.querySelector('.chat-time').textContent = time;
+
+    const badge = item.querySelector(`[id^="unread-"]`);
+    const inThisChat = norm(name) === norm(User);
+
+    if (badge) {
+        if (isIncoming && !inThisChat) {
+            let count = parseInt(badge.textContent, 10) || 0;
+            badge.textContent = count + 1;
+            badge.style.display = 'flex';
+        } else if (inThisChat) {
+            badge.textContent = 0;
+            badge.style.display = 'none';
+        }
+    }
+
+    if (privateChatList.firstElementChild !== item) {
+        privateChatList.prepend(item);
+    }
+}
+
+
+/* =========================================================
+   ۷. اضافه کردن گروه به سایدبار
+========================================================= */
+function addGroupToSidebar(groupId, groupName) {
+    const groupList = document.getElementById('groupList');
+    if (!groupList) return;
+    if (groupList.querySelector(`[data-group-id="${groupId}"]`)) return;
+
+    const item = document.createElement('a');
+    item.href = `/group/${groupId}/`;
+    item.className = 'chat-item group-item';
+    item.dataset.groupId = groupId;
+    item.innerHTML = `
+        <div class="avatar group-avatar">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="chat-info">
+            <div class="chat-name-time">
+                <span class="chat-name">${escapeHtml(groupName)}</span>
+            </div>
+            <div class="chat-last-msg" id="last-message-group-${groupId}">گروه</div>
+        </div>
+        <span class="unread-badge group-unread-badge" id="unread-group-${groupId}" style="display:none;">0</span>
+    `;
+    groupList.prepend(item);
+}
+
+
+/* =========================================================
+   ۸. Heartbeat (برای نگه داشتن وضعیت آنلاین)
+========================================================= */
+let heartbeatInterval = null;
+
+function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+        if (web && web.readyState === WebSocket.OPEN) {
+            web.send(JSON.stringify({ type: 'heartbeat' }));
+        }
+    }, 30000);
+}
+
+
+/* =========================================================
+   ۹. رویدادهای وب‌سوکت
+========================================================= */
+web.onopen = function () {
+    console.log('WebSocket connected');
+
+    // پاک کردن badge گروه فعلی
+    if (isGroupPage && currentGroupId) {
+        const badge = document.getElementById(`unread-group-${currentGroupId}`);
+        if (badge) {
+            badge.textContent = '0';
+            badge.style.display = 'none';
+        }
+    }
+
+    const statusme = document.getElementById('statusme');
+        if (statusme) {
+            statusme.textContent = 'آنلاین';
+            statusme.classList.add('is-online');
+        }
+
+    startHeartbeat();
+
+    if (!isGroupPage) {
+        web.send(JSON.stringify({ type: 'ihave_seen' }));
+        const TotalNotif = document.getElementById(`unread-${User}`);
+        if (TotalNotif) {
+            TotalNotif.textContent = 0;
+            TotalNotif.style.display = 'none';
+        }
+    }
+};
+
+web.onmessage = function (event) {
+    let data;
+    try {
+        data = JSON.parse(event.data);
+    } catch (e) {
+        return;
+    }
+console.log('WS:', data);
+    // ----- لیست آنلاین‌ها -----
+if (data.type_of_data === 'online_list') {
+    onlineSet.clear();
+    data.users.forEach(n => onlineSet.add(norm(n)));
+    paintAllStatuses();
+    if (!isGroupPage) CheckUser(onlineSet.has(norm(User)) ? 'online' : 'offline');
+}
+
+// ----- تغییر وضعیت یک کاربر -----
+if (data.type_of_data === 'onlainam') {
+    const key = norm(data.user_name);
+    if (data.status === 'online') onlineSet.add(key); else onlineSet.delete(key);
+    if (!isGroupPage && key === norm(User)) CheckUser(data.status);
+    const item = findChatItem(data.user_name);
+    if (item) paintStatus(item);
+}
+
+    // ----- پیام جدید شخصی -----
+    if (data.type_of_data === 'new') {
+        updateSidebar(data.sender, data.message, data.date, true);
+
+        onlineSet.add(norm(data.sender));
+        const senderItem = findChatItem(data.sender);
+        if (senderItem) paintStatus(senderItem);
+
+        if (data.sender === User) {
+            msgArea.insertAdjacentHTML('beforeend', `
+                <div class="message incoming">
+                    ${escapeHtml(data.message)}
+                    <div class="message-footer">
+                        <span class="time">${data.date}</span>
+                    </div>
+                </div>
+            `);
+            scrollToBottom();
+            if (web.readyState === WebSocket.OPEN) {
+                web.send(JSON.stringify({ type: 'ihave_seen' }));
+            }
+        }
+    }
+
+    // ----- پیام گروهی جدید -----
+    if (data.type_of_data === 'group_new') {
+        const groupLastMsg = document.getElementById(`last-message-group-${data.group_id}`);
+        if (groupLastMsg) {
+            groupLastMsg.textContent = `${data.sender}: ${data.message}`;
+        }
+
+        if (data.group_id == currentGroupId) {
+            if (data.sender === me) return;
+
+            msgArea.insertAdjacentHTML('beforeend', `
+                <div class="message incoming">
+                    <div style="font-size:0.75rem; color:#666; margin-bottom:2px;">${escapeHtml(data.sender)}</div>
+                    ${escapeHtml(data.message)}
+                    <div class="message-footer">
+                        <span class="time">${data.date}</span>
+                    </div>
+                </div>
+            `);
+            scrollToBottom();
+        }
+    }
+
+    // ----- فایل گروهی -----
+    if (data.type_of_data === 'group_file') {
+        const groupLastMsg = document.getElementById(`last-message-group-${data.group_id}`);
+        if (groupLastMsg) {
+            groupLastMsg.textContent = `${data.sender}: ${data.filename || 'فایل'}`;
+        }
+
+        if (data.group_id == currentGroupId) {
+            if (data.sender === me) return;
+
+            const fileName = data.filename || 'فایل';
+            const fileUrl = data.file_url || '#';
+            msgArea.insertAdjacentHTML('beforeend', `
+                <div class="message incoming">
+                    <div style="font-size:0.75rem; color:#666; margin-bottom:2px;">${escapeHtml(data.sender)}</div>
+                    <a href="${escapeHtml(fileUrl)}" download="${escapeHtml(fileName)}" target="_blank"
+                       style="color: inherit; text-decoration: underline;">
+                        📄 ${escapeHtml(fileName)}
+                    </a>
+                    <div class="message-footer">
+                        <span class="time">${data.date}</span>
+                    </div>
+                </div>
+            `);
+            scrollToBottom();
+        }
+    }
+
+    // ----- نوتیف پیام/فایل گروهی (وقتی داخل گروه نیستیم) -----
+    if (data.type_of_data === 'group_message_notification') {
+        const groupItem = document.querySelector(`[data-group-id="${data.group_id}"]`);
+        if (groupItem) {
+            const lastMsg = document.getElementById(`last-message-group-${data.group_id}`);
+            if (lastMsg) {
+                const preview = data.file_url ? (data.filename || 'فایل') : data.message;
+                lastMsg.textContent = `${data.sender}: ${preview}`;
+            }
+
+            if (!(isGroupPage && data.group_id == currentGroupId)) {
+                const badge = document.getElementById(`unread-group-${data.group_id}`);
+                if (badge) {
+                    let count = parseInt(badge.textContent, 10) || 0;
+                    badge.textContent = count + 1;
+                    badge.style.display = 'flex';
+                }
+            }
+
+            const groupList = document.getElementById('groupList');
+            if (groupList && groupList.firstElementChild !== groupItem) {
+                groupList.prepend(groupItem);
+            }
+        }
+    }
+
+    // ----- تیک خوانده شدن -----
+    if (data.type_of_data === 'ihave_seen' || data.type === 'send_send') {
+         if (!isGroupPage && norm(data.reciver) === norm(User)) {
+        document.querySelectorAll('.message.outgoing .message-status.sent').forEach(el => {
+            el.classList.remove('sent');
+            el.classList.add('read');
+        });
+    }
+    }
+
+    // ----- نتیجه جستجو -----
+    if (data.type_of_data === 'search') {
+        searchResults.innerHTML = '';
+        if (data.users.length === 0) {
+            searchResults.innerHTML = '<p style="color:gray; text-align:center;">کاربری یافت نشد</p>';
+            return;
+        }
+        data.users.forEach(user => {
+            const item = document.createElement('div');
+            item.style.cssText = 'padding:8px 12px; border-bottom:1px solid #eee; cursor:pointer;';
+            item.textContent = user.full_name ?? 'نام نامشخص';
+            item.addEventListener('click', () => {
+                window.location.href = `/chat/${encodeURIComponent(user.full_name)}`;
+            });
+            searchResults.appendChild(item);
+        });
+    }
+
+    // ----- وضعیت بلاک -----
+    if (data.type_of_data === 'block_state') {
+        applyBlockState(data.i_blocked, data.he_blocked);
+    }
+
+    // ----- گروه ساخته شد -----
+    if (data.type_of_data === 'group_created') {
+        document.getElementById('createGroupModal').style.display = 'none';
+        window.location.href = `/group/${data.group_id}/`;
+    }
+
+    // ----- اضافه شدن به گروه -----
+    if (data.type_of_data === 'added_to_group') {
+        addGroupToSidebar(data.group_id, data.group_name);
+    }
+
+    // ----- خطا -----
+    if (data.type_of_data === 'error') {
+        alert(data.message);
+    }
+
+    // ----- اعضا اضافه شدند -----
+    if (data.type_of_data === 'members_added') {
+        const countEl = document.getElementById('groupMemberCount');
+        if (countEl) countEl.textContent = data.member_count;
+    }
+
+    // ----- یک عضو حذف شد -----
+    if (data.type_of_data === 'member_removed') {
+        const countEl = document.getElementById('groupMemberCount');
+        if (countEl) countEl.textContent = data.member_count;
+        currentMembers = currentMembers.filter(n => n !== data.full_name);
+        document.getElementById('manageMembersModal').style.display = 'none';
+    }
+
+    // ----- آپدیت تعداد اعضا -----
+    if (data.type_of_data === 'group_members_updated') {
+        if (data.group_id == currentGroupId) {
+            const countEl = document.getElementById('groupMemberCount');
+            if (countEl) countEl.textContent = data.member_count;
+        }
+    }
+
+    // ----- شما از گروه حذف شدید -----
+    if (data.type_of_data === 'removed_from_group') {
+        const item = document.querySelector(`[data-group-id="${data.group_id}"]`);
+        if (item) item.remove();
+
+        if (isGroupPage && data.group_id == currentGroupId) {
+            alert('شما از این گروه حذف شدید');
+            window.location.href = '/';
+        }
+    }
+
+    // ----- فایل شخصی -----
+    if (data.type_of_data === 'file') {
+        updateSidebar(data.sender, data.filename || 'فایل', data.date, true);
+        if (data.sender === User) {
+            const fileName = data.filename || 'فایل';
+            const fileUrl = data.file_url || '#';
+            msgArea.insertAdjacentHTML('beforeend', `
+                <div class="message incoming">
+                    <a href="${escapeHtml(fileUrl)}" download="${escapeHtml(fileName)}" target="_blank"
+                       style="color: inherit; text-decoration: underline;">
+                        📄 ${escapeHtml(fileName)}
+                    </a>
+                    <div class="message-footer">
+                        <span class="time">${data.date}</span>
+                    </div>
+                </div>
+            `);
+            scrollToBottom();
+            if (web.readyState === WebSocket.OPEN) {
+                web.send(JSON.stringify({ type: 'ihave_seen' }));
+            }
+        }
+    }
+};
+
+web.onclose = function () {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    const statusme = document.getElementById('statusme');
+    if (statusme) {
+        statusme.textContent = 'آفلاین (دوباره تلاش کنید)';
+        statusme.classList.remove('is-online');
+    }
+};
+
+web.onerror = function () {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    const statusme = document.getElementById('statusme');
+    if (statusme) {
+        statusme.textContent = 'آفلاین (دوباره تلاش کنید)';
+        statusme.classList.remove('is-online');
+    }
+};
+
+
+/* =========================================================
+   ۱۰. بلاک / آنبلاک
+========================================================= */
+function showBlockedBar(html) {
+    const area = document.querySelector('.chat-input-area');
+    if (area) area.innerHTML = html;
+}
+
+function restoreInputBar() {
+    const area = document.querySelector('.chat-input-area');
+    if (!area) return;
+
+    area.innerHTML = `
+        <div class="input-actions">
+            <i class="fa-solid fa-paperclip" title="ارسال فایل"></i>
+        </div>
+        <input type="text" id="messageInput" placeholder="پیام خود را بنویسید...">
+        <button class="send-btn" id="btn"><i class="fa-solid fa-paper-plane"></i></button>
+    `;
+
+    msgInput = document.getElementById('messageInput');
+    sendBtn = document.getElementById('btn');
+
+    sendBtn.addEventListener('click', SendMessage);
+    msgInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            SendMessage();
         }
     });
 
-    window.addEventListener('load', function () {
-        var box = document.getElementById('messagesContainer');
-        if (box) box.scrollTop = box.scrollHeight;
-    });
-})();
+    const clip = area.querySelector('.fa-paperclip');
+    if (clip) clip.addEventListener('click', () => fileInput.click());
+}
 
+function applyBlockState(iBlocked, heBlocked) {
+    if (iBlocked) {
+        showBlockedBar('<p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>');
+    } else if (heBlocked) {
+        showBlockedBar('<p>کاربر شما را مسدود کرده است</p>');
+    } else {
+        restoreInputBar();
+    }
+
+    const btn_block = document.getElementById('blocker');
+    if (btn_block) btn_block.style.display = iBlocked ? 'none' : 'flex';
+}
+
+const btn_block = document.getElementById('blocker');
+if (btn_block) {
+    btn_block.addEventListener('click', function () {
+        if (web.readyState === WebSocket.OPEN) {
+            web.send(JSON.stringify({ type: 'block' }));
+            showBlockedBar('<p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>');
+        }
+    });
+}
+
+document.querySelector('.chat-input-area')?.addEventListener('click', function (e) {
+    if (e.target.closest('.unblock-btn') && web.readyState === WebSocket.OPEN) {
+        web.send(JSON.stringify({ type: 'unblock' }));
+    }
+});
+
+
+/* =========================================================
+   ۱۱. مودال جستجو
+========================================================= */
 const searchModal = document.getElementById('searchModal');
-const searchIcon = document.getElementById('search'); 
+const searchIcon = document.getElementById('search');
 const closeSearchBtn = document.getElementById('closeSearchModal');
 const liveSearchInput = document.getElementById('liveSearchInput');
 const searchResults = document.getElementById('searchResults');
@@ -279,7 +906,7 @@ const searchResults = document.getElementById('searchResults');
 if (searchIcon) {
     searchIcon.addEventListener('click', () => {
         searchModal.style.display = 'flex';
-        if (liveSearchInput) liveSearchInput.focus();
+        liveSearchInput?.focus();
     });
 }
 
@@ -299,474 +926,235 @@ window.addEventListener('click', (e) => {
     }
 });
 
-
-const chatList = document.querySelector('.chat-list');
-
-function findChatItem(name) {
-    return Array.from(chatList.querySelectorAll('.chat-item'))
-        .find(el => el.dataset.name === name);
-}
-const norm = s => (s || '').trim().replace(/ي/g, 'ی').replace(/ك/g, 'ک');
-
-function createChatItem(name) {
-    const item = document.createElement('div');
-    item.className = 'chat-item';
-    item.dataset.name = name;
-    item.innerHTML = `
-        <div class="avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></div>
-        <div class="chat-info">
-            <div class="chat-name-time">
-                <span class="chat-name"></span>
-                <span class="chat-time"></span>
-            </div>
-            <div class="chat-last-msg"></div>
-        </div>
-        <span class="unread-badge unread" style="display:none;">0</span>
-        <span class="unread-badge online-badge" style="display:flex;">انلاین</span>`;
-
-    item.querySelector('.chat-name').textContent = name;
-    item.querySelector('.chat-last-msg').id = `last-message-${name}`;
-    item.querySelector('.unread').id = `unread-${name}`;
-    item.querySelector('.online-badge').id = `un-${name}`;
-
-    item.addEventListener('click', () => {
-        window.location.href = `/chat/${encodeURIComponent(name)}/`;
-    });
-    return item;
-}
-
-function updateSidebar(name, message, time, isIncoming) {
-    let item = findChatItem(name);
-    if (!item) item = createChatItem(name);       
-
-    item.querySelector('.chat-last-msg').textContent = message;
-    item.querySelector('.chat-time').textContent = time;
-
-    const badge = item.querySelector('.unread-badge[id^="unread-"]');
-    const inThisChat = norm(name) === norm(User);
-
-    if (badge) {
-        if (isIncoming && !inThisChat) {           
-            let count = parseInt(badge.textContent, 10);
-            if (isNaN(count)) count = 0;            
-            badge.textContent = count + 1;
-            badge.style.display = 'flex';
-        } else if (inThisChat) {                   
-            badge.textContent = 0;
-            badge.style.display = 'none';
-        }
-    }
-
-    if (chatList.firstElementChild !== item) chatList.prepend(item);   
-}
-
-let msgInput = document.getElementById("messageInput");
-let sendBtn = document.getElementById("btn");
-const msgArea = document.getElementById("messagesContainer");
-
-
-const StatusUser = document.getElementById('userStatus')
-const User = '{{username.full_name}}'
-const me = '{{request.user.full_name}}'
-function CheckUser(status){
-    if (!StatusUser) return;
-    if (status == 'online'){
-        StatusUser.textContent = 'انلاین';
-        StatusUser.className = 'online';
-        StatusUser.style = 'color:green';
-    }else{
-        StatusUser.textContent = 'افلاین';
-        StatusUser.className = 'offline';
-        StatusUser.style = 'color:red';
-    }
-}
-const address = window.location.protocol === 'https:' ? 'wss' : 'ws'
-const web = new WebSocket(`${address}://${window.location.host}/websocket/${User}`)
-
-function getCurrentTime() {
-    return new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
-}
-
-function scrollToBottom() {
-    if (msgArea) {
-        msgArea.scrollTop = msgArea.scrollHeight;
-    }
-}
-function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function SendMessage(){
-    const Message = msgInput.value.trim()
-   if (!Message || web.readyState !== WebSocket.OPEN) {
-  console.log('WebSocket is not open');
-  return;
-}
-    
-    web.send(JSON.stringify({msg:Message,type:'new'}))
-    const time = getCurrentTime()
-    msgArea.insertAdjacentHTML(
-        'beforeend',
-        ` <div class="message outgoing">
-                   ${escapeHtml(Message)}
-                    <div class="message-footer">
-                        <span class="time">${time}</span>
-                        <span class="message-status sent tik-status">
-                            <i class="fa-solid fa-check"></i>
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </div>
-                </div>`
-    )
-    
-    msgInput.value = ''
-    scrollToBottom()
-    updateSidebar(User, Message, new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'}), false);
-
-}
-document.querySelector('.chat-input-area').addEventListener('click', function(e){
-    const btn = e.target.closest('.unblock-btn');
-    if (!btn) return;
-    if (web.readyState === WebSocket.OPEN){
-        web.send(JSON.stringify({type: 'unblock'}));
-    }
-});
-if (sendBtn) sendBtn.addEventListener("click", SendMessage);
-if (msgInput) {
-    msgInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            SendMessage();
-        }
-    });
-}
-
-
-
-web.onopen = function(){
-    console.log('connect done ')
-    const statusme = document.getElementById('statusme')
-    if(statusme){
-        statusme.textContent = 'انلاین'
-        statusme.style.color = 'green'
-    }
-    web.send(JSON.stringify({type:'ihave_seen'}))
-
-    const TotalNotif = document.getElementById(`unread-${User}`)
-    if (TotalNotif){
-        TotalNotif.textContent = 0
-        TotalNotif.style.display = 'none'
-    }
-}
-if(liveSearchInput){
-    liveSearchInput.addEventListener('input',function(){
-        const query = this.value.trim()
-        if(query.length === 0){
-            searchResults.innerHTML = ''
-            return
-        }
-        if(web.readyState === WebSocket.OPEN){
-            web.send(JSON.stringify({
-                'quary':query,
-                'type':'search'
-            }))
-        }
-    })
-}
-function showBlockedBar(html){
-    const area = document.querySelector('.chat-input-area');
-    if (area) area.innerHTML = html;
-}
-
-function restoreInputBar(){
-    const area = document.querySelector('.chat-input-area');
-    if (!area) return;
-
-    area.innerHTML = `
-        <div class="input-actions">
-            <i class="fa-solid fa-paperclip" title="ارسال فایل"></i>
-        </div>
-        <input type="text" id="messageInput" placeholder="پیام خود را بنویسید...">
-        <button class="send-btn" id="btn"><i class="fa-solid fa-paper-plane"></i></button>`;
-
-    msgInput = document.getElementById('messageInput');
-    sendBtn  = document.getElementById('btn');
-
-    sendBtn.addEventListener('click', SendMessage);
-    msgInput.addEventListener('keydown', function(event){
-        if (event.key === 'Enter'){
-            event.preventDefault();
-            SendMessage();
-        }
-    });
-
-    const clip = area.querySelector('.fa-paperclip');
-    if (clip) clip.addEventListener('click', () => fileInput.click());
-}
-const btn_block = document.getElementById('blocker')
-if(btn_block){
-btn_block.addEventListener('click',function(){
-    console.log('بلاک شد ')
-    if(web.readyState === WebSocket.OPEN){
-        console.log('بلاک شد ')
-        web.send(JSON.stringify({
-            'type' : 'block'
-        }))
-        const inputArea = document.querySelector('.chat-input-area');
-        if (inputArea) {
-            showBlockedBar('<p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>');
-        }
-    }
-})
-}
-function applyBlockState(iBlocked, heBlocked){
-    if (iBlocked){
-        showBlockedBar('<p>این کاربر را مسدود کردید <button class="unblock-btn">رفع مسدودیت</button></p>');
-    } else if (heBlocked){
-        showBlockedBar('<p>کاربر شما را مسدود کرده است</p>');
-    } else {
-        restoreInputBar();
-    }
-    if (btn_block) btn_block.style.display = iBlocked ? 'none' : 'flex';
-}
-const inputAreaBox = document.querySelector('.chat-input-area');
-if (inputAreaBox){
-    inputAreaBox.addEventListener('click', function(e){
-        const btn = e.target.closest('.unblock-btn');
-        if (!btn) return;
-        if (web.readyState === WebSocket.OPEN){
-            web.send(JSON.stringify({type: 'unblock'}));
-        }
-    });
-}
-
-
-
-web.onmessage = function(event){
-    let data;
-    try{
-        data = JSON.parse(event.data)
-    }catch(e){
-        return
-    }
-        if (data.type_of_data === 'online_list'){
-        data.users.forEach(function(name){
-            const badge = document.getElementById(`un-${name}`);
-            if (badge) badge.textContent = 'آنلاین';
-            if (name === User) CheckUser('online');
-        });
-    }
-    
-    if (data.type_of_data === 'onlainam'){
-        const isOnline = data.status === 'online';
-        if (data.user_name === User){
-            CheckUser(data.status)
-            
-        }
-        const badge = document.getElementById(`un-${data.user_name}`);
-    if (badge) {
-        badge.textContent = isOnline ? 'انلاین' : 'افلاین';
-        badge.style.color = isOnline ? 'green' : 'red';
-    }
-
-    }
-
-    if (data.type_of_data === 'new'){
-         updateSidebar(data.sender, data.message, data.date, true);
-         
-    const senderStatusBadge = document.getElementById(`un-${data.sender}`);
-         if (senderStatusBadge) {
-             senderStatusBadge.textContent = 'انلاین';
-             senderStatusBadge.style.color = 'green';
-         }
-    
-        if(data.sender === User){
-            console.log('در همین صفحه بود ')
-             msgArea.insertAdjacentHTML(
-        'beforeend',
-        ` <div class="message incoming">
-                   ${escapeHtml(data.message)}
-                    <div class="message-footer">
-                        <span class="time">${data.date}</span>
-                    </div>
-                </div>`
-
-    )
-    scrollToBottom()
-    if (web.readyState === WebSocket.OPEN){
-        web.send(JSON.stringify({type:'ihave_seen'}))
-    }
-        }
-    
-    }
-    if (data.type_of_data === 'ihave_seen' || data.type === 'send_send'){
-        console.log('اره اوومد ')
-        if (me === data.sender || data.sender === User){
-            const all_chat = document.querySelectorAll('.message.outgoing .message-status.sent')
-            all_chat.forEach(function (e){
-                e.classList.remove('sent')
-                e.classList.add('read')
-            })
-        }
-
-    }
-    if (data.type_of_data === 'search'){
-        console.log('سرچ اومد')
-        searchResults.innerHTML = ''
-        if (data.users.length === 0 ){
-            searchResults.innerHTML = '<p style="color:gray; text-align:center;">کاربری یافت نشد</p>';
+if (liveSearchInput) {
+    liveSearchInput.addEventListener('input', function () {
+        const query = this.value.trim();
+        if (query.length === 0) {
+            searchResults.innerHTML = '';
             return;
         }
-        data.users.forEach(user =>{
-            const item = document.createElement('div');
-            item.style.padding = '8px 12px';
-            item.style.borderBottom = '1px solid #eee';
-            item.style.color = '#222';
-            item.style.backgroundColor = '#fff';
-            item.textContent = user.full_name ?? 'نام نامشخص';
-            console.log(user.full_name)
-            item.addEventListener('click',()=>{
-                window.location.href = `/chat/${encodeURIComponent(user.full_name)}`
-            } )
-            searchResults.appendChild(item)
-        })
-    }
-       if (data.type_of_data === 'block_state'){
-        applyBlockState(data.i_blocked, data.he_blocked);
-    }
-
-      
-
-    if (data.type_of_data === 'file'){
-         updateSidebar(data.sender, data.file_url || data.filename || 'فایل', data.date, true);
-         
-    const senderStatusBadge = document.getElementById(`un-${data.sender}`);
-         if (senderStatusBadge) {
-             senderStatusBadge.textContent = 'انلاین';
-             senderStatusBadge.style.color = 'green';
-         }
-    
-        if(data.sender === User){
-            const fileName = data.filename || data.file_url?.split('/').pop() || 'فایل';
-        const fileUrl  = data.file_url || '#';
-            console.log('در همین صفحه بود ')
-             msgArea.insertAdjacentHTML(
-        'beforeend',
-        ` <div class="message incoming">
-                   <a href="${escapeHtml(fileUrl)}" download="${escapeHtml(fileName)}" target="_blank" style="color: inherit; text-decoration: underline;">
-                    📄 ${escapeHtml(fileName)}
-                </a>
-                    <div class="message-footer">
-                        <span class="time">${data.date}</span>
-                    </div>
-                </div>`
-
-    )
-    scrollToBottom()
-    if (web.readyState === WebSocket.OPEN){
-        web.send(JSON.stringify({type:'ihave_seen'}))
-    }
+        if (web.readyState === WebSocket.OPEN) {
+            web.send(JSON.stringify({ quary: query, type: 'search' }));
         }
-    
+    });
+}
+
+
+/* =========================================================
+   ۱۲. مدیریت اعضای گروه
+========================================================= */
+document.getElementById('addMemberBtn')?.addEventListener('click', function () {
+    const list = document.getElementById('addMemberList');
+    list.innerHTML = '';
+
+    document.querySelectorAll('#privateChatList .chat-item').forEach(item => {
+        const name = item.dataset.name;
+        if (!name || currentMembers.includes(name)) return;
+
+        const div = document.createElement('div');
+        div.style.padding = '6px 0';
+        div.innerHTML = `
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" value="${name}">
+                <span>${name}</span>
+            </label>
+        `;
+        list.appendChild(div);
+    });
+
+    if (list.children.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:#999;">کاربر جدیدی برای افزودن وجود ندارد</p>';
     }
-   
-}
-web.onclose = function(){
-    const TotalNotif = document.getElementById('statusme')
-            TotalNotif.textContent = 'افلاین (دوباره تلاش کنید)'
-            TotalNotif.style.color = 'red'
 
-}
+    document.getElementById('addMemberModal').style.display = 'flex';
+});
 
-web.onerror = function(){
-const TotalNotif = document.getElementById('statusme')
-            TotalNotif.textContent = 'افلاین (دوباره تلاش کنید)'
-            TotalNotif.style.color = 'red'
-}
-const hamburgerBtn = document.getElementById("hamburgerBtn");
-const hamburgerMenu = document.getElementById("hamburgerMenu");
+document.getElementById('submitAddMembers')?.addEventListener('click', function () {
+    const selected = [...document.querySelectorAll('#addMemberList input:checked')]
+        .map(input => input.value);
 
-hamburgerBtn.addEventListener("click", function (e) {
+    if (selected.length === 0) {
+        alert('حداقل یک نفر را انتخاب کنید');
+        return;
+    }
+
+    if (web.readyState === WebSocket.OPEN) {
+        web.send(JSON.stringify({
+            type: 'add_members',
+            members: selected
+        }));
+    }
+    document.getElementById('addMemberModal').style.display = 'none';
+});
+
+document.getElementById('closeAddMember')?.addEventListener('click', function () {
+    document.getElementById('addMemberModal').style.display = 'none';
+});
+
+document.getElementById('manageMembersBtn')?.addEventListener('click', function () {
+    const list = document.getElementById('manageMembersList');
+    list.innerHTML = '';
+
+    currentMembers.forEach(name => {
+        if (name === me) return;
+
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;';
+        div.innerHTML = `
+            <span>${name}</span>
+            <button class="remove-member-btn" data-name="${name}"
+                    style="background:#ef4444; color:white; border:none; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem;">
+                حذف
+            </button>
+        `;
+        list.appendChild(div);
+    });
+
+    if (list.children.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:#999;">عضو دیگری وجود ندارد</p>';
+    }
+
+    document.getElementById('manageMembersModal').style.display = 'flex';
+});
+
+document.getElementById('manageMembersList')?.addEventListener('click', function (e) {
+    const btn = e.target.closest('.remove-member-btn');
+    if (!btn) return;
+
+    const name = btn.dataset.name;
+    if (!confirm(`آیا مطمئن هستید که می‌خواهید «${name}» را از گروه حذف کنید؟`)) return;
+
+    if (web.readyState === WebSocket.OPEN) {
+        web.send(JSON.stringify({
+            type: 'remove_member',
+            full_name: name
+        }));
+    }
+});
+
+document.getElementById('closeManageMembers')?.addEventListener('click', function () {
+    document.getElementById('manageMembersModal').style.display = 'none';
+});
+
+
+/* =========================================================
+   ۱۳. ساخت گروه
+========================================================= */
+document.getElementById('createGroupBtn')?.addEventListener('click', function () {
+    document.getElementById('createGroupModal').style.display = 'flex';
+
+    const memberList = document.getElementById('memberList');
+    memberList.innerHTML = '';
+
+    document.querySelectorAll('#privateChatList .chat-item').forEach(item => {
+        const name = item.dataset.name;
+        if (!name) return;
+
+        const div = document.createElement('div');
+        div.style.padding = '6px 0';
+        div.innerHTML = `
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" value="${name}">
+                <span>${name}</span>
+            </label>
+        `;
+        memberList.appendChild(div);
+    });
+});
+
+document.getElementById('submitCreateGroup')?.addEventListener('click', function () {
+    const name = document.getElementById('groupNameInput').value.trim();
+    if (!name) {
+        alert('نام گروه را وارد کنید');
+        return;
+    }
+
+    const selectedMembers = [...document.querySelectorAll('#memberList input:checked')]
+        .map(input => input.value);
+
+    if (web.readyState === WebSocket.OPEN) {
+        web.send(JSON.stringify({
+            type: 'create_group',
+            name: name,
+            members: selectedMembers
+        }));
+    } else {
+        alert('اتصال برقرار نیست');
+    }
+});
+
+document.getElementById('closeCreateGroup')?.addEventListener('click', function () {
+    document.getElementById('createGroupModal').style.display = 'none';
+    document.getElementById('groupNameInput').value = '';
+});
+
+
+/* =========================================================
+   ۱۴. منوی همبرگری و سه نقطه
+========================================================= */
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const hamburgerMenu = document.getElementById('hamburgerMenu');
+const threeDotsBtn = document.getElementById('threeDotsBtn');
+const threeDotsMenu = document.getElementById('threeDotsMenu');
+
+hamburgerBtn?.addEventListener('click', function (e) {
     e.stopPropagation();
-    hamburgerMenu.classList.toggle("show");
-    threeDotsMenu.classList.remove("show"); 
+    hamburgerMenu.classList.toggle('show');
+    threeDotsMenu?.classList.remove('show');
 });
 
-const threeDotsBtn = document.getElementById("threeDotsBtn");
-const threeDotsMenu = document.getElementById("threeDotsMenu");
-
-threeDotsBtn.addEventListener("click", function (e) {
+threeDotsBtn?.addEventListener('click', function (e) {
     e.stopPropagation();
-    threeDotsMenu.classList.toggle("show");
-    hamburgerMenu.classList.remove("show"); 
+    threeDotsMenu?.classList.toggle('show');
+    hamburgerMenu.classList.remove('show');
 });
 
-window.addEventListener("click", function () {
-    hamburgerMenu.classList.remove("show");
-    threeDotsMenu.classList.remove("show");
+window.addEventListener('click', function () {
+    hamburgerMenu?.classList.remove('show');
+    threeDotsMenu?.classList.remove('show');
 });
 
-const appContainer = document.querySelector(".app-container");
-const backBtn = document.querySelector(".back-btn");
+
+/* =========================================================
+   ۱۵. موبایل
+========================================================= */
+const appContainer = document.querySelector('.app-container');
+const backBtn = document.querySelector('.back-btn');
 
 function isMobileLayout() {
-    return window.matchMedia("(max-width: 768px)").matches;
+    return window.matchMedia('(max-width: 768px)').matches;
 }
 
 function openMobileChat() {
     if (isMobileLayout() && appContainer) {
-        appContainer.classList.add("mobile-chat-open");
+        appContainer.classList.add('mobile-chat-open');
     }
 }
 
 function closeMobileChat() {
-    if (appContainer) {
-        appContainer.classList.remove("mobile-chat-open");
-    }
+    if (appContainer) appContainer.classList.remove('mobile-chat-open');
 }
 
-if (backBtn) {
-    backBtn.addEventListener("click", closeMobileChat);
-}
+backBtn?.addEventListener('click', closeMobileChat);
 
-document.querySelectorAll(".chat-item").forEach(function (item) {
-    item.addEventListener("click", function () {
-        openMobileChat();
-    });
+document.querySelectorAll('.chat-item').forEach(item => {
+    item.addEventListener('click', openMobileChat);
 });
 
 if (isMobileLayout() && appContainer) {
-    appContainer.classList.add("mobile-chat-open");
+    appContainer.classList.add('mobile-chat-open');
 }
 
-window.addEventListener("resize", function () {
+window.addEventListener('resize', function () {
     if (!isMobileLayout() && appContainer) {
-        appContainer.classList.remove("mobile-chat-open");
+        appContainer.classList.remove('mobile-chat-open');
     }
 });
 
 
-
-
-
-
-
-
-scrollToBottom();
-
-document.addEventListener('DOMContentLoaded', function() {
-    const items = document.querySelectorAll('.new-version');
-
-    items.forEach(function(item) {
-        item.addEventListener('click', function() {
-            alert('در این ورژن این گزینه‌ها پیاده‌سازی نشدن');
-        });
-    });
-});
-
-
+/* =========================================================
+   ۱۶. آپلود فایل
+========================================================= */
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.style.display = 'none';
@@ -777,54 +1165,51 @@ const progressBar = document.getElementById('uploadProgressBar');
 const progressContainer = document.getElementById('uploadProgressContainer');
 const progressText = document.getElementById('progressText');
 
-
 if (paperclipBtn) {
-    paperclipBtn.addEventListener('click', () => {
-        fileInput.click();
-    });
+    paperclipBtn.addEventListener('click', () => fileInput.click());
 }
 
-
-fileInput.addEventListener('change', function() {
+fileInput.addEventListener('change', function () {
     const file = fileInput.files[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append('file', file);
 
-   
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/upload/${encodeURIComponent(User)}/`, true);
-    
+    const uploadUrl = isGroupPage
+        ? `/upload-group/${currentGroupId}/`
+        : `/upload/${encodeURIComponent(User)}/`;
 
-
+    xhr.open('POST', uploadUrl, true);
     progressContainer.style.display = 'block';
 
-    // رویداد رصد درصد پیشرفت ارسال
-    xhr.upload.addEventListener('progress', function(e) {
+    xhr.upload.addEventListener('progress', function (e) {
         if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 100);
-            progressBar.style.width = percentComplete + '%';
-            progressText.textContent = percentComplete + '%';
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressText.textContent = percent + '%';
         }
     });
 
-    
-    xhr.onload = function() {
+    xhr.onload = function () {
         if (xhr.status === 200) {
-            console.log('فایل با موفقیت ارسال شد');
-            
-           msgArea.insertAdjacentHTML(
-    'beforeend',
-    `<div class="message outgoing">
-        <a href="${URL.createObjectURL(file)}" download="${escapeHtml(file.name)}" target="_blank" style="color: inherit; text-decoration: underline;">
-            📄 ${escapeHtml(file.name)}
-        </a>
-        ...
-    </div>`
-);
-            updateSidebar(User, file.name, new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'}), false);
+            msgArea.insertAdjacentHTML('beforeend', `
+                <div class="message outgoing">
+                    <a href="${URL.createObjectURL(file)}" download="${escapeHtml(file.name)}" target="_blank"
+                       style="color: inherit; text-decoration: underline;">
+                        📄 ${escapeHtml(file.name)}
+                    </a>
+                    <div class="message-footer">
+                        <span class="time">${getCurrentTime()}</span>
+                    </div>
+                </div>
+            `);
             scrollToBottom();
+
+            if (!isGroupPage) {
+                updateSidebar(User, file.name, new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), false);
+            }
         } else {
             alert('خطا در ارسال فایل');
         }
@@ -832,18 +1217,24 @@ fileInput.addEventListener('change', function() {
         setTimeout(() => {
             progressContainer.style.display = 'none';
             progressBar.style.width = '0%';
-            fileInput.value = ''; 
+            fileInput.value = '';
         }, 1000);
     };
 
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         alert('مشکل در اتصال به سرور هنگام آپلود فایل');
         progressContainer.style.display = 'none';
     };
 
     xhr.send(formData);
 });
+
+
+/* =========================================================
+   ۱۷. اسکرول اولیه
+========================================================= */
+scrollToBottom();
 </script>
-<p>v:1.0</p>
+
 </body>
 </html>
