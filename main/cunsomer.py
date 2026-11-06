@@ -56,7 +56,6 @@ class RealTime(WebsocketConsumer):
         self.send_online_list()
 
     def get_private_contact_ids(self):
-        """همیشه لیست مخاطبین چت شخصی را برمی‌گرداند (برای online_list و سایدبار)"""
         sent = models.Message.objects.filter(sender=self.user).values_list('recive_id', flat=True)
         got = models.Message.objects.filter(recive=self.user).values_list('sender_id', flat=True)
         ids = set(sent) | set(got)
@@ -105,7 +104,6 @@ class RealTime(WebsocketConsumer):
             return True
 
     def refresh_online(self):
-        """برای heartbeat - فقط expire را تمدید می‌کند"""
         key = f'online_count_{self.user.id}'
         count = cache.get(key)
         if count and count > 0:
@@ -207,7 +205,7 @@ class RealTime(WebsocketConsumer):
                 recive = self.receiver,
                 message = message,
                 date = timezone.now(),
-                seen = False,
+                seen = (self.receiver.id == self.user.id),
             )
 
             response = ({
@@ -219,13 +217,13 @@ class RealTime(WebsocketConsumer):
                 'username':self.receiver.full_name
                 
             })
-
-            async_to_sync(self.channel_layer.group_send)(
-                f'user_{self.receiver.id}',{
-                    'type':'send_message_new',
-                    'data':response
-                }
-            )
+            if self.receiver.id != self.user.id:
+                async_to_sync(self.channel_layer.group_send)(
+                    f'user_{self.receiver.id}',{
+                        'type':'send_message_new',
+                        'data':response
+                    }
+                )
 
         elif message_type == 'create_group':
             group_name = str(data.get('name', '')).strip()
@@ -327,7 +325,6 @@ class RealTime(WebsocketConsumer):
             if not added_users:
                 return
 
-            # به اعضای جدید اطلاع بده
             for user in added_users:
                 async_to_sync(self.channel_layer.group_send)(
                     f'user_{user.id}',
@@ -339,7 +336,6 @@ class RealTime(WebsocketConsumer):
                     }
                 )
 
-            # به همه اعضای فعلی گروه اطلاع بده که اعضا تغییر کرده
             new_count = self.group_id_check.members.count()
             async_to_sync(self.channel_layer.group_send)(
                 f'group_{self.group_id_check.id}',
@@ -362,7 +358,6 @@ class RealTime(WebsocketConsumer):
             if not self.is_group:
                 return
 
-            # فقط سازنده گروه می‌تواند عضو حذف کند
             if self.group_id_check.creator_id != self.user.id:
                 self.send(text_data=json.dumps({
                     'type_of_data': 'error',
@@ -379,7 +374,6 @@ class RealTime(WebsocketConsumer):
             except CustomUser.DoesNotExist:
                 return
 
-            # نمی‌تواند خودش را حذف کند (یا اگر می‌خواهید اجازه دهید، این شرط را بردارید)
             if user_to_remove.id == self.user.id:
                 self.send(text_data=json.dumps({
                     'type_of_data': 'error',
@@ -392,7 +386,6 @@ class RealTime(WebsocketConsumer):
 
             self.group_id_check.members.remove(user_to_remove)
 
-            # به کاربر حذف‌شده اطلاع بده
             async_to_sync(self.channel_layer.group_send)(
                 f'user_{user_to_remove.id}',
                 {
@@ -402,7 +395,6 @@ class RealTime(WebsocketConsumer):
                 }
             )
 
-            # به بقیه اعضای گروه اطلاع بده
             new_count = self.group_id_check.members.count()
             async_to_sync(self.channel_layer.group_send)(
                 f'group_{self.group_id_check.id}',
@@ -490,7 +482,6 @@ class RealTime(WebsocketConsumer):
         }))
 
     def notify_group_message(self, event):
-        """وقتی پیام گروهی می‌آید ولی کاربر داخل آن گروه نیست"""
         data = event['data'].copy()
         data = event['data']
         data['type_of_data'] = 'group_message_notification'
@@ -517,13 +508,11 @@ class RealTime(WebsocketConsumer):
 
 
     def disconnect(self, code):
-            # همیشه کانال شخصی را ترک کن
             if hasattr(self, 'personal_group'):
                 async_to_sync(self.channel_layer.group_discard)(
                     self.personal_group, self.channel_name
                 )
 
-            # اگر کانال گروه جدا بود، آن را هم ترک کن
             if hasattr(self, 'group_name') and self.group_name != getattr(self, 'personal_group', None):
                 async_to_sync(self.channel_layer.group_discard)(
                     self.group_name, self.channel_name

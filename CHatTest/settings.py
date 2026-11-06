@@ -149,3 +149,11 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', 
 ]
 AUTH_USER_MODEL = 'account.CustomUser'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'chat-cache',
+        'OPTIONS': {'MAX_ENTRIES': 10000},
+    }
+}

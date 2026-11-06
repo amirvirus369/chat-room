@@ -135,7 +135,7 @@ def upload(request, user):
                 recive=user,
                 file=file,
                 date=timezone.now(),
-                seen=False
+                seen=(user.id == request.user.id)
             )
             res = {
                 'type_of_data': 'file',
@@ -146,10 +146,11 @@ def upload(request, user):
                 'date': timezone.now().strftime('%H:%M')
             }
             layer = get_channel_layer()
-            async_to_sync(layer.group_send)(
-                f'user_{user.id}',
-                {'type': 'send_file', 'data': res}
-            )
+            if user.id != request.user.id:
+                async_to_sync(layer.group_send)(
+                    f'user_{user.id}',
+                    {'type': 'send_file', 'data': res}
+                )
             return JsonResponse({'status': 'success', 'file_url': msg.file.url})
         return JsonResponse({'status': 'invalid request'}, status=400)
     return JsonResponse({'status': 'request is not post'}, status=403)

@@ -949,7 +949,7 @@ document.getElementById('addMemberBtn')?.addEventListener('click', function () {
 
     document.querySelectorAll('#privateChatList .chat-item').forEach(item => {
         const name = item.dataset.name;
-        if (!name || currentMembers.includes(name)) return;
+        if (!name || norm(name) === norm(me) || currentMembers.includes(name)) return;
 
         const div = document.createElement('div');
         div.style.padding = '6px 0';
@@ -1047,8 +1047,8 @@ document.getElementById('createGroupBtn')?.addEventListener('click', function ()
     memberList.innerHTML = '';
 
     document.querySelectorAll('#privateChatList .chat-item').forEach(item => {
-        const name = item.dataset.name;
-        if (!name) return;
+       const name = item.dataset.name;
+       if (!name || norm(name) === norm(me)) return;
 
         const div = document.createElement('div');
         div.style.padding = '6px 0';
